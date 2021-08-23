@@ -171,6 +171,7 @@ export default function TabFunctions({access_token, base}) {
         <Grid
             container
             direction="row">
+                
             <div className={clsx(classes.column, classes.helper)}>
                 <Typography variant="subtitle2">
                     Sync with new bank account has been connected to Casso.
@@ -189,7 +190,7 @@ export default function TabFunctions({access_token, base}) {
                         Sync
                 </Button>
             </div>
-        </TabPanel>
+        </TabPanel> 
       </SwipeableViews>
     </div>
   );

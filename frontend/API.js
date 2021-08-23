@@ -133,7 +133,7 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
                     <Button
                         variant="contained"
                         className = {classes.button}
-                        onClick = {() => createAPI_Table(valueRef.current.value, getAPI, setAccessToken, setData, getName, getEmail)} >
+                        onClick = {() => createAPI_Table(valueRef.current.value, getAPI, setAccessToken, setRevenueData, setExpenseData, getName, getEmail)} >
                         GO
                     </Button>
                     <br/>
@@ -146,27 +146,28 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
         ;  
     }
 
-    async function createAPI_Table(api, getAPI, setAccessToken, setData, getName, getEmail) {
+    async function createAPI_Table(api, getAPI, setAccessToken, setRevenueData, setExpenseData, getName, getEmail) {
         getAPI(api);
         const API_TABLE = 'API';
         const API_FIELD = [{name: 'API Key', type: FieldType.SINGLE_LINE_TEXT}, 
                         ];
-        const token_data = await getAccessToken(apiKey.toString());
+        const token_data = await getAccessToken(api.toString());
 
         if (token_data.error != null && token_data.error == "401") {alert("API Key is wrong!");}
         else {
+            
             setAccessToken(token_data.access_token.toString());
             if (base.hasPermissionToCreateTable(API_TABLE, API_FIELD) && apiTable == null) {
                 await base.createTableAsync(API_TABLE, API_FIELD);
                 apiTable = base.getTableByName(API_TABLE);
                 apiTable.createRecordAsync({
-                    'API Key': apiKey.toString(),
+                    'API Key': api.toString(),
                 })
             }
             else {
                 const query = await apiTable.selectRecordsAsync();
                 apiTable.updateRecordAsync(query.recordIds[0], {
-                    'API Key': apiKey.toString(),
+                    'API Key': api.toString(),
                 })
                 query.unloadData();
             }
@@ -181,7 +182,8 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
     }
 }
 
-async function getAccessToken(apiKey) {  
+async function getAccessToken(apiKey) {
+    
     const data_raw = {'code': apiKey};
     const request = {
         method: 'POST',
@@ -192,6 +194,7 @@ async function getAccessToken(apiKey) {
     const response = await fetch(`${access_token_endpoint}/v1/token`, request); 
     const data_rep = await response.json();
     await delayAsync(50);
+    
     return data_rep;
 }
 
