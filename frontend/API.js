@@ -5,9 +5,11 @@ import React, { useState, useRef } from "react";
 import { Dashboard } from "./Dashboard";
 import { makeStyles } from '@material-ui/core/styles';
 import { Tooltip,Button, Typography, Grow, Grid, TextField, Input} from '@material-ui/core';
-import { getAmount } from "./Chart";
+
 import { Homepage } from "./Homepage";
 const access_token_endpoint = 'https://oauth.casso.vn';
+
+
 export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
     let apiTable = base.getTableByNameIfExists("API");
     
@@ -15,7 +17,7 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
     const default_date = new Date(today.getFullYear(), today.getMonth(), 1);
     
     const [toDashboard, setToDashboard] = useState(false);
-
+    const [checkDone, setCheckDone] = useState(false);
     const [business_name , getName] = useState("");
     const [email, getEmail] = useState("");
 
@@ -25,11 +27,11 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
 
     async function check_access(access_token) {
         if (access_token != "") {
-            let ar = await getInfo(access_token);
-            getName(ar.data.business.name);
-            getEmail(ar.data.user.email);
-            await getAmount(access_token, formatDate(default_date), setRevenueData, setExpenseData);
-            setToDashboard(true);
+            await getInfo(access_token, getName, getEmail);
+            
+            await getAmount(access_token, formatDate(default_date), setRevenueData, setExpenseData, setToDashboard);
+            
+            // setToDashboard(true);
         }
     }
     
@@ -50,8 +52,21 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
             borderRadius: 50
         },
     }));
-    
-   
+
+    async function clicked( getAPI, valueRef) {
+        
+        await createAPI_Table(valueRef.current.value, getAPI, setAccessToken);
+
+        await getInfo(access_token, getName, getEmail);
+        await getAmount(access_token, formatDate(default_date), setRevenueData, setExpenseData, setToDashboard);
+
+        // if (checkDone ==true) setToDashboard(true);
+    }
+
+    const ReApiBox = React.memo(ApiBox);
+    function Re_ApiBox({getAPI}) {
+        return (<ReApiBox getAPI = {getAPI}/>);
+    };
     return toDashboard ? (<Homepage business_name = {business_name}
                                     email = {email}
                                     access_token = {access_token} 
@@ -59,7 +74,8 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
                                     revenue_data = {revenue_data}
                                     expense_data = {expense_data}/>):
     
-    (<ApiBox getAPI = {getAPI} />);
+    (<Re_ApiBox getAPI = {getAPI} />);
+    
     
     function ApiBox({getAPI}) {
         const text = "An application from Casso Vietnam";
@@ -118,8 +134,6 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
                 direction="column"
                 justifyContent="space-between"
                 alignItems="center" >
-                    <img width = "35%" height = "35%" 
-                     src = 'https://i.imgur.com/59IUbEq.png'/>
                     <br/>
                     <br/>
                     <TextField
@@ -133,7 +147,7 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
                     <Button
                         variant="contained"
                         className = {classes.button}
-                        onClick = {() => createAPI_Table(valueRef.current.value, getAPI, setAccessToken, setRevenueData, setExpenseData, getName, getEmail)} >
+                        onClick = {() => clicked(getAPI, valueRef)} >
                         GO
                     </Button>
                     <br/>
@@ -146,7 +160,7 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
         ;  
     }
 
-    async function createAPI_Table(api, getAPI, setAccessToken, setRevenueData, setExpenseData, getName, getEmail) {
+    async function createAPI_Table(api, getAPI, setAccessToken) {
         getAPI(api);
         const API_TABLE = 'API';
         const API_FIELD = [{name: 'API Key', type: FieldType.SINGLE_LINE_TEXT}, 
@@ -155,29 +169,22 @@ export function GetAPI({apiKey, getAPI, access_token, setAccessToken, base}) {
 
         if (token_data.error != null && token_data.error == "401") {alert("API Key is wrong!");}
         else {
-            
             setAccessToken(token_data.access_token.toString());
+            
             if (base.hasPermissionToCreateTable(API_TABLE, API_FIELD) && apiTable == null) {
                 await base.createTableAsync(API_TABLE, API_FIELD);
                 apiTable = base.getTableByName(API_TABLE);
-                apiTable.createRecordAsync({
+                await apiTable.createRecordAsync({
                     'API Key': api.toString(),
                 })
             }
             else {
                 const query = await apiTable.selectRecordsAsync();
-                apiTable.updateRecordAsync(query.recordIds[0], {
+                await apiTable.updateRecordAsync(query.recordIds[0], {
                     'API Key': api.toString(),
                 })
                 query.unloadData();
-            }
-            await getAmount(access_token, formatDate(default_date), setRevenueData, setExpenseData);
-            let ar = await getInfo(access_token);
-            getName(ar.data.business.name);
-            getEmail(ar.data.user.email);
-
-            setToDashboard(true);
-            
+            }      
         }
     }
 }
@@ -198,7 +205,7 @@ async function getAccessToken(apiKey) {
     return data_rep;
 }
 
-async function getInfo(access_token) {
+async function getInfo(access_token, getName, getEmail) {
     const request = {
         method: 'GET',
         headers: { 'Authorization': access_token },
@@ -207,11 +214,15 @@ async function getInfo(access_token) {
     const response = await fetch(`${access_token_endpoint}/v1/userInfo`, request);
     
     const data_rep = await response.json();
-    
+    await getUserInfo(getName, getEmail, data_rep);
     await delayAsync(50);
-    return data_rep;
+    
+    
 }
-
+async function getUserInfo(getName, getEmail, data_rep) {
+    getName(data_rep.data.business.name);
+    getEmail(data_rep.data.user.email);
+}
 function delayAsync(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

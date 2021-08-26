@@ -1,7 +1,7 @@
 import { GetTransactions } from "./GetTransactions";
 
 const access_token_endpoint = 'https://oauth.casso.vn';
-export async function SyncBank(fromDate, access_token, base, bank_id) {
+export async function SyncBank(fromDate, access_token, base, bank_id,setIsSnack) {
     const data_raw = {'bank_acc_id': bank_id.toString()};
     const request = {
         method: 'POST',
@@ -16,7 +16,7 @@ export async function SyncBank(fromDate, access_token, base, bank_id) {
     await delayAsync(50);
 
     if (data_rep.error == "401") {alert("Invalid Bank ID!")}
-    else GetTransactions(fromDate, access_token, base);
+    else GetTransactions(fromDate, access_token, base,setIsSnack);
 }
 
 function delayAsync(ms) {

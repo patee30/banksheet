@@ -36,7 +36,6 @@ import AccordionActions from '@material-ui/core/AccordionActions';
 import { GetTransactions } from './GetTransactions';
 import { SyncBank } from './SyncBank';
 import { Splash } from '.';
-import { Charting, getAmount } from './Chart';
 import { Box } from '@material-ui/core';
 const access_token_endpoint = 'https://oauth.casso.vn';
 export function Dashboard({apiKey, access_token, base, business_name, email}) {

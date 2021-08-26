@@ -6,7 +6,8 @@ import React,  {useState }  from 'react';
 import {useViewport} from '@airtable/blocks/ui';
 import TabFunctions from "./Tab";
 import clsx from 'clsx';
-import { HomeChart } from "./HomeChart";
+
+import { Splash } from ".";
 export function Homepage({business_name, email, access_token, base, revenue_data, expense_data}) {
     const viewport = useViewport();
     const useStyles = makeStyles((theme) => ({
@@ -32,7 +33,7 @@ export function Homepage({business_name, email, access_token, base, revenue_data
         },
         
     }));
-
+    const [isLogOut, setIsLogOut] = useState(false);
     const sum_revenue = getSum(revenue_data[1]);
     const sum_expense = getSum(expense_data[1]);
 
@@ -50,9 +51,9 @@ export function Homepage({business_name, email, access_token, base, revenue_data
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
  
-
-    return (
-        <Box className = {classes.root}
+    
+    return isLogOut? (<Re_splash />) : 
+        (<Box className = {classes.root}
             sizeHeight = {viewport.size.height}
             sizeWidth = {viewport.size.width}
             paddingBottom = "20">
@@ -77,6 +78,7 @@ export function Homepage({business_name, email, access_token, base, revenue_data
                    
                       <div>
                         <Button
+                        className = {classes.exit}
                         aria-describedby={id} variant="contained"
                         onClick={handleClick}
                         startIcon = {<AccountCircleIcon/>}
@@ -103,7 +105,7 @@ export function Homepage({business_name, email, access_token, base, revenue_data
                                     <Typography variant="subtitle2" className = {classes.info}>Email: {email}</Typography>
                                     <br/>
                                     <div className = {classes.button}>
-                                        <Button className = {classes.exit}>Exit</Button>
+                                        <Button className = {classes.exit} onClick = {() => setIsLogOut(true)}>Exit</Button>
                                     </div>  
                         
                         </Popover>
@@ -123,6 +125,7 @@ export function Homepage({business_name, email, access_token, base, revenue_data
         </Box>
     );
 }
+export const Re_splash = React.memo(Splash);
 
 function getSum(data) {
     let sum = 0;

@@ -13,7 +13,7 @@ const AMOUNT_FIELD = 'Amount';
 const DESCRIPTION_FIELD = 'Description';
 
 
-export async function GetTransactions(fromDate, access_token, base) {
+export async function GetTransactions(fromDate, access_token, base, setIsSnack) {
     const trans_field = [
             {name: ID_TRANS_FIELD, type: FieldType.SINGLE_LINE_TEXT},
             {name: DATE_FIELD, type: FieldType.SINGLE_LINE_TEXT},
@@ -40,6 +40,9 @@ export async function GetTransactions(fromDate, access_token, base) {
     const tmp_response = await fetch(`${access_token_endpoint}/v1/transactions?fromDate=${fromDate}&sort=DESC`, request);
 
     const tmp_data_rep = await tmp_response.json();
+
+    await delayAsync(100);
+    if (tmp_data_rep == '401') alert("Warning");
     
     const pageSize = tmp_data_rep.data.totalRecords;
 
@@ -95,6 +98,7 @@ export async function GetTransactions(fromDate, access_token, base) {
     
     query.unloadData();
     await delayAsync(50);
+    setIsSnack(true);
 }
 
 async function createRecords(table, recordUpdates) {
