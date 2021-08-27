@@ -1,7 +1,7 @@
 import {initializeBlock,useBase,useViewport, Loader} from '@airtable/blocks/ui';
 import React,  {useState, useRef }  from 'react';
 import {FieldType} from '@airtable/blocks/models';
-import { GetAPI } from './API';
+
 import { makeStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import { Tooltip, Button, Typography, Grow, Box, TextField} from '@material-ui/core';
@@ -49,7 +49,7 @@ export function GetApiForm({valueRef, base, access_token, apiKey}) {
 
     const businessName = useRef("");
     const userEmail = useRef("");
-
+    const setTime = useRef("");
     const revenue = useRef([]);
     const expense = useRef([]);
     const [isDash, setIsDash] = useState(false);
@@ -62,13 +62,13 @@ export function GetApiForm({valueRef, base, access_token, apiKey}) {
         apiKey.current = valueRef.current.value;
         await createAPI_Table(valueRef.current.value, base);
         await delayAsync(500);
-        await getAccessToken(valueRef.current.value, access_token);
+        await getAccessToken(valueRef.current.value, access_token, setTime);
         await getInfo(access_token.current, businessName, userEmail);
         await GetTrans(access_token.current, default_date, revenue, expense);
         setIsUpdateInProgress(false);
         setIsDash(true);
     }
-    return isDash? (<PreDashboard revenue={revenue} expense={expense} businessName={businessName.current} userEmail={userEmail.current} access_token={access_token.current} base={base}/>) : (
+    return isDash? (<PreDashboard setTime={setTime.current} revenue={revenue} expense={expense} businessName={businessName.current} userEmail={userEmail.current} access_token={access_token.current} base={base} noti={false}/>) : (
         <Box 
             className = {classes.root}
             sizeHeight = {viewport.size.height}

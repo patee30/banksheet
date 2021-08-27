@@ -26,7 +26,7 @@ export function WeeklyRevenue({revenue}) {
             width: theme.spacing(5),
             height: theme.spacing(5),
             justifyContent: 'center',
-            marginBottom: theme.spacing(3),
+            marginBottom: theme.spacing(1),
             color: "#04297a",
             backgroundImage: `linear-gradient(135deg, ${alpha("#1976d2", 0)} 0%, ${alpha(
                 "#1976d2",

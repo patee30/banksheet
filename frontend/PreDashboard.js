@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect} from 'react';
 import classNames from "classnames";
 // material
-import { Box, Grid, Container, Typography, CssBaseline, Button, AppBar, Toolbar
+import {Tooltip, Box, Grid, Container, Typography, CssBaseline, Button, AppBar, Toolbar
 , IconButton, TextField, Snackbar ,
 Menu,
 MenuItem,
-Drawer, List} from '@material-ui/core';
+Drawer, List, Slider, Divider, Avatar} from '@material-ui/core';
+import { green, pink } from '@material-ui/core/colors';
 import {
     MuiPickersUtilsProvider,
     KeyboardTimePicker,
@@ -26,19 +27,22 @@ import { WeeklyChart } from './components/WeeklyChart';
 import { WeeklyBonus } from './components/Bonus';
 import MenuIcon from "@material-ui/icons/Menu";
 import AccountCircle from '@material-ui/icons/AccountCircle';
-import { GetTransactions } from './GetTransactions';
-import { SyncBank } from './SyncBank';
+import { GetTransactions } from './function/GetTransactions';
+import { SyncBank } from './function/SyncBank';
 import Alert from '@material-ui/lab/Alert';
 import { SplashView } from './Splash';
 import Profile from './components/Profile';
+import { Loader } from '@airtable/blocks/ui';
+//------------------------------------------------------------------------------------
 const drawerWidth = 220;
 
 const styles = makeStyles((theme) => ({
   root: {
-    display: "flex"
+    display: "flex",
+    scale: "0.8"
   },
   appBar: {
-    backgroundColor: "#15ab64",
+    backgroundColor: "#0d8073",
     zIndex: theme.zIndex.drawer + 1
   },
   appBarShift: {
@@ -74,13 +78,15 @@ const styles = makeStyles((theme) => ({
     width: drawerWidth,
     flexShrink: 0,
     whiteSpace: "nowrap"
+    
   },
   drawerOpen: {
     width: drawerWidth,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen
-    })
+    }),
+    background: "#15ab64"
   },
   drawerClose: {
     transition: theme.transitions.create("width", {
@@ -88,17 +94,26 @@ const styles = makeStyles((theme) => ({
       duration: theme.transitions.duration.leavingScreen
     }),
     overflowX: "hidden",
-    width: theme.spacing.unit * 7 + 1,
+    width: theme.spacing.unit * 7 - 2,
     [theme.breakpoints.up("sm")]: {
-      width: theme.spacing.unit * 9 + 1
-    }
+      width: theme.spacing.unit * 7 
+    },
+    background: "#15ab64"
+  },
+  logo: {
+    width: theme.spacing.unit * 7 - 2,
+    [theme.breakpoints.up("sm")]: {
+      width: theme.spacing.unit * 7 
+    },
+    padding: "10",
+    flexGrow: -1,
   },
   toolbar: {
     display: "flex",
     alignItems: "center",
     marginTop: theme.spacing.unit,
     justifyContent: "flex-end",
-    padding: "1 5px",
+    padding: "1 1px",
     ...theme.mixins.toolbar
   },
   content: {
@@ -116,10 +131,30 @@ const styles = makeStyles((theme) => ({
         backgroundColor: '#0d8073',
         color: '#fff'
     },
+  drawer_icon:{
+    color: "#ffffff",
+  },
+  top_drawer: {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    padding: "10px"
+  },
+  bottom_drawer: {
+    display: "flex",
+    flexDirection: "column",
+    padding: "10px"
+  },
+  profile: {
+    color: green[500],
+    backgroundColor: 'fff' ,
+  }
 },
 }));
 
-export function PreDashboard({revenue, expense, businessName, userEmail, access_token, base}) {
+export function PreDashboard({setTime, revenue, expense, businessName, userEmail, access_token, base, noti}) {
+    
+    const time_out = setTime;
     const [anchorEl, setAnchorE1] = useState(null);
     const [open, setOpen] = useState(false);
     const isOpen = Boolean(anchorEl);
@@ -134,6 +169,29 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
     const default_date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
     const [selectedDate, setSelectedDate] = useState(default_date);
     const [toSplash, setToSplash] = useState(false);
+
+    function expired(setToSplash, setIsSnack) {
+      setToSplash(true);
+      setIsSnack(true);
+    };
+    const [isNoti, setIsNoti] = useState(noti);
+    useEffect(
+      () => {
+        let timer1 = setTimeout(() => expired(setToSplash, setIsSnack), time_out * 1000);
+        return () => {
+          clearTimeout(timer1);
+          
+        };
+      },
+      []
+    );
+    const notiClose = (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+  
+      setIsNoti(false);
+  };
     const snackClose = (event, reason) => {
         if (reason === 'clickaway') {
           return;
@@ -182,7 +240,26 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
         setIsTrans(false);
         setIsSync(true);
     };
-    return toSplash? (<SplashView />) : (
+    const [isLoad, setIsLoad] = useState(false);
+    async function trans () {
+      setIsLoad(true);
+      await GetTransactions(formatDate(selectedDate), access_token, base, setIsSnack);
+      setIsLoad(false);
+    }
+    async function sync () {
+      setIsLoad(true);
+      await SyncBank(formatDate(selectedDate), access_token, base, valueRef.current.value, setIsSnack);
+      setIsLoad(false);
+    }
+    return toSplash? ( <div>         <SplashView />
+                     {isSnack && <Snackbar open={isSnack} onClose={snackClose}
+              >
+                <Alert onClose={snackClose} severity="warning">
+                Your session has expired!
+                        </Alert>
+              </Snackbar>
+            } </div>
+            ) : (
         <div className={classes.root}>
             <CssBaseline />
             <AppBar
@@ -191,7 +268,7 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
              fooJon={classNames(classes.appBar, {
                 [classes.appBarShift]: open
               })}>
-                  <Toolbar disableGutters={true}>
+                  <Toolbar position="fixed" disableGutters={true}>
                   <IconButton
                     color="inherit"
                     aria-label="Open drawer"
@@ -217,9 +294,9 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
                         aria-owns={isOpen ? "menu-appbar" : undefined}
                         aria-haspopup="true"
                         onClick={handleMenu}
-                        color="inherit"
+                        
                     >
-                        <AccountCircle/>
+                        <Avatar className={classes.profile}>T</Avatar>
                     </IconButton>
                     <Menu
                         id="menu-appbar"
@@ -244,6 +321,7 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
             
             <Drawer
                 variant="permanent"
+                
                 className={classNames(classes.drawer, {
                   [classes.drawerOpen]: open,
                   [classes.drawerClose]: !open
@@ -256,24 +334,50 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
                 }}
                 open={open}
             >
-                
+    
                 <div className={classes.toolbar} />
+                
                 <List>
-                    {["Dashboard", "Get Transactions", "Sync Bank Account"].map((text, index) => (
-                    <ListItem button key={text}>
-                        <ListItemIcon>
-                        {index % 3 === 0 ? <HomeIcon onClick={setHome} /> : (index % 3 === 1 ? <AccountBalanceIcon onClick={setTrans} /> :  <SyncIcon onClick={setSync}/>)} 
-                        </ListItemIcon>
-                        <ListItemText primary={text} />
-                    </ListItem>
-                    ))}
-                </List>               
+                <Tooltip title="Dashboard">
+                  <ListItem style={{color:'#fff'}} button onClick={setHome}  >
+                      <ListItemIcon>
+                          <HomeIcon style={{color:"fff"}} />
+                      </ListItemIcon>
+                      <ListItemText primary="Dashboard" />
+                  </ListItem>
+                  </Tooltip>
+                  <Divider />
+                  <Tooltip title="Transactions">
+                  <ListItem style={{color:'#fff'}} button onClick={setTrans}  >
+                      <ListItemIcon>
+                          <AccountBalanceIcon style={{color:"fff"}} />
+                      </ListItemIcon>
+                      <ListItemText primary="Transactions" />
+                  </ListItem>
+                  </Tooltip>
+                  <Divider />
+                  <Tooltip title="Sync Bank Account">
+                  <ListItem style={{color:'#fff'}} button onClick={setSync}>
+                      <ListItemIcon>
+                          <SyncIcon style={{color:"fff"}}  />
+                      </ListItemIcon>
+                      <ListItemText primary="Sync Bank" />
+                  </ListItem>
+                  </Tooltip>
+                  <Divider />
+                </List>
+                    
             </Drawer>
+            {noti && <Snackbar
+                            open={isNoti} anchorOrigin={{ vertical: "top", horizontal: "center" }} autoHideDuration={4000} onClose={notiClose}>
+                        <Alert onClose={notiClose} severity="success">
+                        Updated transactions!
+                        </Alert>
+                    </Snackbar>  }
             {isSnack && <Snackbar
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }} 
-                            open={isSnack} autoHideDuration={4000} onClose={snackClose}>
+                            open={isSnack} anchorOrigin={{ vertical: "top", horizontal: "center" }} autoHideDuration={4000} onClose={snackClose}>
                         <Alert onClose={snackClose} severity="success">
-                        Success!
+                        Task succeeded!
                         </Alert>
                     </Snackbar>  }
             {toProfile && <Profile businessName={businessName} userEmail={userEmail} toProfile={toProfile} setToProfile={setToProfile} />}
@@ -315,10 +419,11 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
                                     </MuiPickersUtilsProvider>
                             </Grid>
                             <br/>
-
-
+                            <br/>
+                            {isLoad && <Loader scale={0.5} />}
+                            <br/>
                             <Button className={classes.button} 
-                                onClick={() => GetTransactions(formatDate(selectedDate), access_token, base, setIsSnack)}>
+                                onClick={() => trans()}>
                                         Get
                             </Button> 
                         </Grid>
@@ -333,6 +438,8 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
                     justifyContent="flex-start"
                     alignItems="center" 
                     spacing={3}>
+                      <Typography variant="h4">Dashboard</Typography>
+                                <Typography variant="subtitle2">Weekly data</Typography>
                         <Grid item xs={12} md={6} lg={8} alignItems="center">
                             <WeeklyChart revenue={revenue.current} expense={expense.current} />
                         </Grid>
@@ -342,13 +449,14 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
                             justifyContent="center"
                             alignItems="center"
                             spacing={1}>
-                        <Grid item xs={6} sm={3} md={3}>
+                              
+                        <Grid item xs={6} sm={3}>
                             <WeeklyRevenue revenue = {revenue}/>    
                         </Grid>
-                        <Grid item xs={6} sm={3} md={3}>
+                        <Grid item xs={6} sm={3}>
                             <WeeklyExpense expense = {expense} />
                         </Grid>
-                        <Grid item xs={6} sm={3} md={3}>
+                        <Grid item xs={6} sm={3}>
                             <WeeklyBonus revenue = {revenue} expense = {expense} />
                         </Grid>
                         </Grid>
@@ -380,9 +488,11 @@ export function PreDashboard({revenue, expense, businessName, userEmail, access_
                                    <TextField required id="standard-basic" label="Bank ID" inputRef={valueRef}/>
                             </Grid>
                             <br/>
-    
+                            <br/>
+                            {isLoad && <Loader scale={0.5} />}
+                            <br/>
                             <Button className={classes.button} 
-                                onClick={() => SyncBank(formatDate(selectedDate), access_token, base, valueRef.current.value, setIsSnack)}>
+                                onClick={() => sync()}>
                                         Sync
                             </Button> 
                         </Grid>

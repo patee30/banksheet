@@ -8,30 +8,30 @@ import { Box, CardHeader, Card } from '@material-ui/core';
 export function WeeklyChart({revenue, expense}) {
     
     const weekly_data = weeklyData(revenue, expense);
+    
     const days = [];
     const revenue_data = [];
     const expense_data = [];
     for (const key of weekly_data.keys()) {
       days.push(key);
     }
-    
     for (const value of weekly_data.values()) {
       revenue_data.push(value[0]);
       expense_data.push(value[1]);
     }
-
+    
     const state =  {
         options: {
         series: [
             {
                 name: 'Revenue',
                 type: 'bar',
-                data: revenue_data.reverse()
+                data: revenue_data
             },
             {
                 name: 'Expense',
                 type: 'bar',
-                data: expense_data.reverse()
+                data: expense_data
             }
         ],           
             chart: {
@@ -53,14 +53,10 @@ export function WeeklyChart({revenue, expense}) {
                 width: 2,
                 colors: ['transparent']
             },
-            yaxis: {
-                title: {
-                  text: 'vnd'
-                }
-            },
 
             xaxis: {
-                categories: days.reverse()
+                categories: days,
+                
             },
             tooltip: {
                 shared: true,

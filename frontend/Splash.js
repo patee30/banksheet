@@ -1,7 +1,7 @@
 import { Dialog, Text, Box, Icon, useRecords, useBase, useViewport, Loader} from "@airtable/blocks/ui";
 import {FieldType} from '@airtable/blocks/models';
 import React, { useState, useRef } from "react";
-import { Dashboard } from "./Dashboard";
+
 import { makeStyles } from '@material-ui/core/styles';
 import { Tooltip,Button, Typography, Grow, Grid, TextField, Input} from '@material-ui/core';
 import { Auth, AuthPage } from "./Auth";
@@ -10,6 +10,7 @@ import { PreDashboard } from "./PreDashboard";
 import { getInfo } from "./function/GetInfo";
 import { GetTrans } from './function/GetTrans';
 import { DialogApi } from "./components/DialogApi";
+import { GetTransactions } from "./function/GetTransactions";
 //------------------------------------------------------------------------------------------------------
 const access_token_endpoint = 'https://oauth.casso.vn';
 export function SplashView ({}) {
@@ -53,10 +54,12 @@ export function SplashView ({}) {
 
     const apiKey = useRef("");
     const access_token = useRef("");
+    const setTime = useRef("");
     const [isClick, setIsClick] = useState(false);
     const [isPreDash, setIsPreDash] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const [isUpdateInProgress, setIsUpdateInProgress] = useState(false);
+    const [isSnack, setIsSnack] = useState(false);
     const base = useBase();
     const businessName = useRef("");
     const userEmail = useRef("");
@@ -82,9 +85,10 @@ export function SplashView ({}) {
         else {   
             if (apiKey.current != "") {
                 setIsUpdateInProgress(true);
-                await getAccessToken(apiKey.current, access_token);
+                await getAccessToken(apiKey.current, access_token, setTime);
                 await getInfo(access_token.current, businessName, userEmail);
                 await GetTrans(access_token.current, default_date, revenue, expense);
+                await GetTransactions(formatDate(default_date), access_token.current, base, setIsSnack);
                 setIsUpdateInProgress(false);
                 setIsPreDash(true);
         }
@@ -94,7 +98,7 @@ export function SplashView ({}) {
         
     }   
     return isClick? (
-        isPreDash? (<PreDashboard revenue = {revenue} expense = {expense} businessName={businessName.current} userEmail={userEmail.current} access_token={access_token.current} base={base} />) : (
+        isPreDash? (<PreDashboard setTime={setTime.current} revenue = {revenue} expense = {expense} businessName={businessName.current} userEmail={userEmail.current} access_token={access_token.current} base={base} noti={isSnack} />) : (
         openDialog?   (<DialogApi openDialog = {openDialog} base = {base}/>) :
         (<AuthPage base={base} access_token={access_token} apiKey = {apiKey}/>))
     ) : 
@@ -194,4 +198,16 @@ export function SplashView ({}) {
 </Box>
 
     )
-}
+};
+function formatDate(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+  
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+    return [year, month, day].join('-');
+  }

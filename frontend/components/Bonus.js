@@ -26,10 +26,10 @@ export function WeeklyBonus({revenue, expense}) {
             width: theme.spacing(5),
             height: theme.spacing(5),
             justifyContent: 'center',
-            marginBottom: theme.spacing(3),
+            marginBottom: theme.spacing(1),
             color: "#7a4f01",
-            backgroundImage: `linear-gradient(135deg, ${alpha("#f4e5ae", 0)} 0%, ${alpha(
-                "#f4e5ae",
+            backgroundImage: `linear-gradient(135deg, ${alpha("#f2e1a8", 0)} 0%, ${alpha(
+                "#f2e1a8",
                 0.24
             )} 100%)`       
         }

@@ -1,7 +1,7 @@
 import React from 'react';
 const access_token_endpoint = 'https://oauth.casso.vn';
 
-export async function getAccessToken(apiKey, access_token) {  
+export async function getAccessToken(apiKey, access_token, setTime) {  
     const data_raw = {'code': apiKey};
     const request = {
         method: 'POST',
@@ -12,6 +12,7 @@ export async function getAccessToken(apiKey, access_token) {
     const response = await fetch(`${access_token_endpoint}/v1/token`, request); 
     const data_rep = await response.json();
     access_token.current = data_rep.access_token;
+    setTime.current = data_rep.expires_in;
     await delayAsync(50);
 }
 
