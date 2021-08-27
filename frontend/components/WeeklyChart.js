@@ -42,9 +42,13 @@ export function WeeklyChart({revenue, expense}) {
                 bar: {
                     horizontal: false,
                     columnWidth: '55%',
-                    endingShape: 'rounded'
+                    endingShape: 'rounded',
+                    fill: {
+                        colors: ["#15ab64","#0d8073"],
+                    },
                 },
             },
+            colors: ["#15ab64","#0d8073"],
             dataLabels: {
                 enabled: false
             },

@@ -12,6 +12,10 @@ import {
     KeyboardTimePicker,
     KeyboardDatePicker,
   } from '@material-ui/pickers';
+  import InputLabel from '@material-ui/core/InputLabel';
+  import FormHelperText from '@material-ui/core/FormHelperText';
+  import FormControl from '@material-ui/core/FormControl';
+  import Select from '@material-ui/core/Select';
   import DateFnsUtils from '@date-io/date-fns';
 import { makeStyles } from "@material-ui/core/styles";
 import ListItem from "@material-ui/core/ListItem";
@@ -148,7 +152,11 @@ const styles = makeStyles((theme) => ({
   profile: {
     color: green[500],
     backgroundColor: 'fff' ,
-  }
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 250,
+  },
 },
 }));
 
@@ -175,6 +183,12 @@ export function PreDashboard({setTime, revenue, expense, businessName, userEmail
       setIsSnack(true);
     };
     const [isNoti, setIsNoti] = useState(noti);
+
+    const [age, setAge] = React.useState('');
+
+    const handleChange = (event) => {
+      setAge(event.target.value);
+    };
     useEffect(
       () => {
         let timer1 = setTimeout(() => expired(setToSplash, setIsSnack), time_out * 1000);
@@ -251,7 +265,7 @@ export function PreDashboard({setTime, revenue, expense, businessName, userEmail
       await SyncBank(formatDate(selectedDate), access_token, base, valueRef.current.value, setIsSnack);
       setIsLoad(false);
     }
-    return toSplash? ( <div>         <SplashView />
+    return toSplash? ( <div><SplashView />
                      {isSnack && <Snackbar open={isSnack} onClose={snackClose}
               >
                 <Alert onClose={snackClose} severity="warning">
@@ -438,12 +452,14 @@ export function PreDashboard({setTime, revenue, expense, businessName, userEmail
                     justifyContent="flex-start"
                     alignItems="center" 
                     spacing={3}>
+                     
+                      
                       <Typography variant="h4">Dashboard</Typography>
                                 <Typography variant="subtitle2">Weekly data</Typography>
-                        <Grid item xs={12} md={6} lg={8} alignItems="center">
-                            <WeeklyChart revenue={revenue.current} expense={expense.current} />
-                        </Grid>
-                        <Grid
+                                <br/>
+      
+                      
+                                <Grid
                             container
                             direction="row"
                             justifyContent="center"
@@ -453,6 +469,7 @@ export function PreDashboard({setTime, revenue, expense, businessName, userEmail
                         <Grid item xs={6} sm={3}>
                             <WeeklyRevenue revenue = {revenue}/>    
                         </Grid>
+                        <br/>
                         <Grid item xs={6} sm={3}>
                             <WeeklyExpense expense = {expense} />
                         </Grid>
@@ -460,6 +477,14 @@ export function PreDashboard({setTime, revenue, expense, businessName, userEmail
                             <WeeklyBonus revenue = {revenue} expense = {expense} />
                         </Grid>
                         </Grid>
+                        <Grid item xs={12} md={6} lg={8} container 
+                          direction="column"
+                          justifyContent="flex-start"
+                          alignItems="center">
+          
+                            <WeeklyChart revenue={revenue.current} expense={expense.current} />
+                        </Grid>
+                        
                     </Grid>
                 </Container>
                 </main>

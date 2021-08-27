@@ -115,12 +115,15 @@ export function GetApiForm({valueRef, base, access_token, apiKey}) {
                 </Grid>
             </Grid>
 
+            
             <Grid
                 container
                 direction="column"
                 justifyContent="space-between"
                 alignItems="center" >
                     <br/>
+                    <br/>
+                    <Typography variant='h6'>Field your Casso API Key here</Typography>
                     <br/>
                     <TextField
                         type="password"
@@ -145,7 +148,7 @@ export function GetApiForm({valueRef, base, access_token, apiKey}) {
                     <br/>
                     <br/>
                     <a href="https://developer.casso.vn/auth-code/tao-authorization-code-thu-cong">
-                         Get instruction for getting api key here.
+                         Get instruction about getting api key here.
                     </a>
             </Grid>
             
